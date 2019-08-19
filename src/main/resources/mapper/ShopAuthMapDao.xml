@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bujidao.dao.ShopAuthMapDao">
+	<resultMap id="shopAuthResultMap" type="com.bujidao.entity.ShopAuthMap">
+		<id column="shop_auth_id" property="shopAuthId"/>
+		<result column="title" property="title"/>
+		<result column="title_flag" property="titleFlag"/>
+		<result column="enable_status" property="enableStatus"/>
+		<result column="create_time" property="createTime"/>
+		<result column="last_edit_time" property="lastEditTime"/>
+		
+		<association property="employee" column="employee_id" javaType="com.bujidao.entity.PersonInfo">
+			<id column="user_id" property="userId"/>
+			<result column="name" property="name"/>
+		</association>
+		
+		<association property="shop" column="shop_id" javaType="com.bujidao.entity.Shop">
+			<id column="shop_id" property="shopId"/>
+			<result column="shop_name" property="shopName"/>
+		</association>
+	</resultMap>
+	
+	<select id="queryShopAuthMapListByShopId" resultMap="shopAuthResultMap">
+		SELECT 
+		sa.shop_auth_id,
+		sa.title,
+		sa.title_flag,
+		sa.create_time,
+		sa.last_edit_time,
+		sa.enable_status,
+		employee.user_id,
+		employee.name,
+		s.shop_id,
+		s.shop_name
+		FROM
+		tb_shop_auth_map sa,
+		tb_person_info employee,
+		tb_shop s
+		WHERE
+		s.shop_id=#{shopId}
+		AND
+		sa.employee_id=employee.user_id
+		AND
+		sa.shop_id=s.shop_id
+		LIMIT
+		#{rowIndex},#{pageSize}
+	</select>
+	
+	
+	<select id="queryShopAuthMapCountByShopId" resultType="int">
+		SELECT 
+		count(1)
+		FROM
+		tb_shop_auth_map sa,
+		tb_person_info employee,
+		tb_shop s
+		WHERE
+		s.shop_id=#{shopId}
+		AND
+		sa.employee_id=employee.user_id
+		AND
+		sa.shop_id=s.shop_id
+	</select>
+	
+	<select id="queryShopAuthMapById" parameterType="long" resultMap="shopAuthResultMap">
+		SELECT 
+		sa.shop_auth_id,
+		sa.title,
+		sa.title_flag,
+		sa.create_time,
+		sa.last_edit_time,
+		sa.enable_status,
+		employee.user_id,
+		employee.name,
+		s.shop_id,
+		s.shop_name
+		FROM
+		tb_shop_auth_map sa,
+		tb_person_info employee,
+		tb_shop s
+		WHERE
+		sa.shop_auth_id=#{shopAuthId}
+		AND
+		sa.employee_id=employee.user_id
+		AND
+		sa.shop_id=s.shop_id
+	</select>
+	
+	<insert id="insertShopAuthMap" parameterType="com.bujidao.entity.ShopAuthMap"
+		 useGeneratedKeys="true" keyColumn="shop_auth_id" keyProperty="shopAuthId">
+		INSERT INTO
+		tb_shop_auth_map(
+			title,title_flag,enable_status,
+			create_time,last_edit_time,
+			shop_id,employee_id)
+		VALUES
+		(	#{title},#{titleFlag},#{enableStatus},
+			#{createTime},#{lastEditTime},
+			#{shop.shopId},#{employee.userId})
+	
+	</insert>
+	<update id="updateShopAuthMap" parameterType="com.bujidao.entity.ShopAuthMap">
+		UPDATE
+		tb_shop_auth_map
+		<set>
+			<if test="title!=null">title=#{title},</if>
+			<if test="titleFlag!=null">title_flag=#{titleFlag},</if>
+			<if test="enableStatus!=null">enable_status=#{enableStatus},</if>
+			<if test="lastEditTime!=null">last_edit_time=#{lastEditTime},</if>
+		</set>
+		WHERE
+		shop_auth_id=#{shopAuthId}
+	</update>
+	
+	<delete id="deleteShopAuthMap">
+		DELETE FROM 
+		tb_shop_auth_map
+		WHERE
+		shop_auth_id=#{shopAuthId}
+	</delete>
+</mapper>

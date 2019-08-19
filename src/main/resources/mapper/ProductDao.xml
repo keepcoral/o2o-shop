@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bujidao.dao.ProductDao">
+	<resultMap type="com.bujidao.entity.Product" id="productMap">
+		<id column="product_id" property="productId"/>
+		<result column="product_name" property="productName"/>
+		<result column="product_desc" property="productDesc" />
+		<result column="img_addr" property="imgAddr" />
+		<result column="normal_price" property="normalPrice" />
+		<result column="promotion_price" property="promotionPrice" />
+		<result column="priority" property="priority" />
+		<result column="create_time" property="createTime" />
+		<result column="last_edit_time" property="lastEditTime" />
+		<result column="enable_status" property="enableStatus" />
+		<result column="point" property="point" />
+		
+		<association property="productCategory" column="product_category_id"
+			javaType="com.bujidao.entity.ProductCategory">
+			<id column="product_category_id" property="productCategoryId" />
+			<result column="product_category_name" property="productCategoryName" />
+			<result column="product_category_desc" property="productCategoryDesc" />
+			<result column="priority" property="priority" />
+			<result column="create_time" property="createTime" />
+			<result column="last_edit_time" property="lastEditTime" />
+		</association>
+		
+		<association property="shop" column="shop_id"
+			javaType="com.bujidao.entity.Shop">
+			<id column="shop_id" property="shopId" />
+			<result column="owner_id" property="ownerId" />
+			<result column="shop_name" property="shopName" />
+			<result column="shop_desc" property="shopDesc" />
+			<result column="shop_addr" property="shopAddr" />
+			<result column="phone" property="phone" />
+			<result column="shop_img" property="shopImg" />
+			<result column="longitude" property="longitude" />
+			<result column="latitude" property="latitude" />
+			<result column="priority" property="priority" />
+			<result column="create_time" property="createTime" />
+			<result column="last_edit_time" property="lastEditTime" />
+			<result column="enable_status" property="enableStatus" />
+			<result column="advice" property="advice" />
+		</association>
+		
+		<collection property="productImgList" column="product_id"
+			ofType="com.bujidao.entity.ProductImg">
+			<id column="product_img_id" property="productImgId" />
+			<result column="product_img_addr" property="imgAddr" />
+			<result column="img_desc" property="imgDesc" />
+			<result column="priority" property="priority" />
+			<result column="create_time" property="createTime" />
+			<result column="product_id" property="productId" />
+		</collection>
+	</resultMap>
+
+	<insert id="insertProduct" parameterType="com.bujidao.entity.Product"
+		useGeneratedKeys="true" keyColumn="product_id" keyProperty="productId">
+		INSERT INTO
+		tb_product(product_name,product_desc,img_addr,
+		normal_price,promotion_price,priority,create_time,
+		last_edit_time,enable_status,point,product_category_id,
+		shop_id)
+		VALUES
+		(#{productName},#{productDesc},#{imgAddr},
+		#{normalPrice},#{promotionPrice},#{priority},#{createTime},
+		#{lastEditTime},#{enableStatus},#{point},#{productCategory.productCategoryId},
+		#{shop.shopId})
+	</insert>
+<!-- 	因为product不管有没有详情照片都要搜索出来 -->
+<!-- 	所以tb_product和tb_product_img要用左外连接 -->
+<!-- 	左外连接的ON (条件a) 是用来生成临时表的条件 而  WHERE (条件b) 是在临时表生成后过滤的条件 -->
+<!-- 	1. on的条件是在连接生成临时表时使用的条件,以左表为基准 ,不管on中的条件真否,都会返回左表中的记录 -->
+<!-- 	2.where条件是在临时表生成好后,再对临时表过滤。 -->
+	<select id="queryByProductId" 
+		parameterType="Long" resultMap="productMap">
+		SELECT 
+		p.product_id,
+		p.product_name,
+		p.product_desc,
+		p.img_addr,
+		p.normal_price,
+		p.promotion_price,
+		p.priority,
+		p.create_time,
+		p.last_edit_time,
+		p.enable_status,
+		p.point,
+		p.product_category_id,
+		p.shop_id,
+		pm.product_img_id,
+		pm.img_addr AS product_img_addr,
+		pm.img_desc,
+		pm.priority,
+		pm.create_time
+		FROM 
+		tb_product p
+		LEFT JOIN
+		tb_product_img pm
+		ON
+		p.product_id=pm.product_id
+		WHERE
+		p.product_id=#{productId}
+		ORDER BY
+		p.point
+		DESC
+	</select>
+	
+	<update id="updateProduct" parameterType="com.bujidao.entity.Product">
+		UPDATE 
+		tb_product
+		<set>
+			<if test="productName!=null">product_name=#{productName},</if>
+			<if test="productDesc!=null">product_desc=#{productDesc},</if>
+			<if test="imgAddr!=null">img_addr=#{imgAddr},</if>
+			<if test="normalPrice!=null">normal_price=#{normalPrice},</if>
+			<if test="promotionPrice!=null">promotion_price=#{promotionPrice},</if>
+			<if test="priority!=null">priority=#{priority},</if>
+			<if test="point!=null">point=#{point},</if>
+			<if test="lastEditTime!=null">last_edit_time=#{lastEditTime},</if>
+			<if test="enableStatus!=null">enable_status=#{enableStatus},</if>
+			<if test="productCategory!=null and productCategory.productCategoryId!=null">
+				product_category_id=#{productCategory.productCategoryId}
+			</if>
+		</set>
+		WHERE
+		product_id=#{productId}
+		AND
+		shop_id=#{shop.shopId}
+		<!-- 		shopId是用作过滤的 -->
+	</update>
+	
+<!-- 	由于我们只查product信息所以可以只用Product不需要用Map -->
+	<select id="queryProductList" resultType="com.bujidao.entity.Product">
+		SELECT
+		product_id,
+		product_name,
+		product_desc,
+		img_addr,
+		normal_price,
+		promotion_price,
+		priority,
+		create_time,
+		last_edit_time,
+		enable_status,
+		point,
+		product_category_id,
+		shop_id
+		FROM 
+		tb_product
+		<where>
+			<if test="productCondition.shop!=null and productCondition.shop.shopId!=null">
+				and shop_id=#{productCondition.shop.shopId}
+			</if>
+			
+			<if test="productCondition.productCategory!=null and productCondition.productCategory.productCategoryId!=null">
+				and product_category_id=#{productCondition.productCategory.productCategoryId}
+			</if>
+			
+			<if test="productCondition.productName!=null">
+				and product_name LIKE '%${productCondition.productName}%'
+			</if>
+			
+			<if test="productCondition.enableStatus!=null">
+				and enable_status=#{productCondition.enableStatus}
+			</if>
+		</where>
+		ORDER BY
+		point
+		DESC
+		LIMIT #{rowIndex},#{pageSize}
+	</select>
+	
+	<select id="queryProductCount" resultType="Integer">
+		SELECT 
+		count(1)
+		FROM 
+		tb_product
+		<where>
+			<if test="productCondition.shop!=null and productCondition.shop.shopId!=null">
+				and shop_id=#{productCondition.shop.shopId}
+			</if>
+			
+			<if test="productCondition.productCategory!=null and productCondition.productCategory.productCategoryId!=null">
+				and product_category_id=#{productCondition.productCategory.productCategoryId}
+			</if>
+			
+			<if test="productCondition.productName!=null">
+				and product_name LIKE '%${productCondition.productName}%'
+			</if>
+			
+			<if test="productCondition.enableStatus!=null">
+				and enable_status=#{productCondition.enableStatus}
+			</if>
+		</where>
+	</select>
+	
+	<select id="queryCountProductByProductCategoryId" parameterType="Long" resultType="Integer">
+		SELECT 
+		count(1)
+		FROM
+		tb_product
+		WHERE
+		product_category_id=#{productCategoryId}
+	</select>
+	
+	<update id="updateProductCategoryToNull" parameterType="Long">
+		UPDATE 
+		tb_product
+		SET 
+		product_category_id=NULL
+		WHERE
+		product_category_id=#{productCategoryId}
+	</update>
+</mapper>
+
+
