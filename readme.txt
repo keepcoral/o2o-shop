@@ -20,7 +20,7 @@ http://139.224.134.99/o2o_test/frontend/index
 http://139.224.134.99/o2o_test/shopadmin/shoplist
 
 
-已提供微信接口
+已提供微信接口(需要关注测试公众号)
 展示系统
 https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxf5147cbc3f0e7700&redirect_uri=http://139.224.134.99/o2o_test/wechatlogin/logincheck&role_type=2&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect
 店家管理系统
